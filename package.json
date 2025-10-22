@@ -1,0 +1,16 @@
+{
+  "name": "penguinglide",
+  "version": "1.0.0",
+  "description": "Cute penguin game for all ages",
+  "scripts": {
+    "build": "echo 'PWA ready!'",
+    "start": "python3 -m http.server 8000"
+  },
+  "dependencies": {
+    "phaser": "^3.70.0"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
+

@@ -1,0 +1,11 @@
+{
+  "buildCommand": "echo 'PWA ready!'",
+  "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+
