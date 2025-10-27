@@ -1,6 +1,4 @@
 {
-  "buildCommand": "echo 'PWA ready!'",
-  "outputDirectory": ".",
   "rewrites": [
     {
       "source": "/(.*)",
