@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Penguin Glide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
+        body { display: flex; justify-content: center; align-items: center; background: #87CEEB; }
+        #game { width: 100%; max-width: 800px; height: 100%; max-height: 600px; background: #E0F6FF; position: relative; overflow: hidden; }
+        .scene { position: absolute; width: 100%; height: 100%; display: none; }
+        .scene.active { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .title { font-size: 48px; font-weight: bold; color: #1a5f7a; margin-bottom: 30px; }
+        .subtitle { font-size: 32px; color: #1a5f7a; margin-bottom: 20px; }
+        .emoji { font-size: 80px; margin: 20px; cursor: pointer; user-select: none; }
+        .button { background: #4CAF50; color: white; border: none; padding: 15px 40px; font-size: 24px; border-radius: 5px; cursor: pointer; margin: 20px; font-weight: bold; }
+        .button:hover { background: #45a049; }
+        .counter { font-size: 20px; color: #1a5f7a; margin: 20px; }
+        .fish-container { position: relative; width: 100%; height: 400px; }
+        .fish { position: absolute; font-size: 40px; cursor: pointer; user-select: none; }
+        .penguin { font-size: 60px; }
+        .stats { font-size: 16px; color: #666; margin-top: 20px; }
+        .credits { text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <!-- Menu Scene -->
+        <div id="menu" class="scene active">
+            <div class="title">Penguin Glide</div>
+            <div class="emoji" id="menu-egg">🥚</div>
+            <div class="subtitle">Help me hatch!</div>
+            <button class="button" onclick="startGame()">Start</button>
+        </div>
+
+        <!-- Hatch Scene -->
+        <div id="hatch" class="scene">
+            <div class="title">Help Hatch!</div>
+            <div class="emoji" id="hatch-egg" onclick="tapEgg()">🥚</div>
+            <div class="counter" id="hatch-counter">Taps: 0/5</div>
+        </div>
+
+        <!-- Level 1 -->
+        <div id="level1" class="scene">
+            <div class="title">Level 1: Slide to Mom!</div>
+            <div style="display: flex; width: 100%; justify-content: space-between; padding: 0 50px;">
+                <div class="penguin">🐧</div>
+                <div class="penguin">🐧</div>
+            </div>
+            <div style="margin-top: 50px; font-size: 16px; color: #fff;">Slide to mom!</div>
+        </div>
+
+        <!-- Level 2 -->
+        <div id="level2" class="scene">
+            <div class="title">Level 2: Collect Fish!</div>
+            <div class="penguin">🐧</div>
+            <div class="counter" id="level2-counter">Fish: 0/4</div>
+            <div class="fish-container" id="fish-container"></div>
+        </div>
+
+        <!-- Level 3-10 -->
+        <div id="level-simple" class="scene">
+            <div class="title" id="simple-title">Level 3: Challenge!</div>
+            <div class="penguin">🐧</div>
+            <div style="margin-top: 50px; font-size: 16px; color: #fff;">Keep going!</div>
+        </div>
+
+        <!-- Credits -->
+        <div id="credits" class="scene">
+            <div class="credits">
+                <div class="title">You Did It!</div>
+                <div class="emoji">🐧</div>
+                <div class="subtitle">Created by</div>
+                <div style="font-size: 24px; color: #1a5f7a; font-weight: bold; margin: 20px;">Razdobreev & GrokForge</div>
+                <div class="stats" id="final-stats">Final: 0 Fish | 50% Fatness</div>
+                <button class="button" onclick="restart()">Restart</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameState = { level: 0, fatness: 0.5, fish: 0, hatchCount: 0 };
+        
+        try {
+            const saved = localStorage.getItem('penguinglide');
+            if (saved) Object.assign(gameState, JSON.parse(saved));
+        } catch (e) {}
+        
+        function saveState() {
+            try { localStorage.setItem('penguinglide', JSON.stringify(gameState)); } catch (e) {}
+        }
+
+        function showScene(sceneId) {
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            document.getElementById(sceneId).classList.add('active');
+        }
+
+        function startGame() {
+            showScene('hatch');
+            gameState.hatchCount = 0;
+            document.getElementById('hatch-counter').textContent = 'Taps: 0/5';
+        }
+
+        function tapEgg() {
+            gameState.hatchCount++;
+            document.getElementById('hatch-counter').textContent = `Taps: ${gameState.hatchCount}/5`;
+            
+            if (gameState.hatchCount >= 5) {
+                gameState.level = 1;
+                gameState.fatness = 0.6;
+                saveState();
+                setTimeout(() => showScene('level1'), 500);
+                setTimeout(() => {
+                    gameState.level = 2;
+                    gameState.fatness = Math.min(1, gameState.fatness + 0.1);
+                    saveState();
+                    showScene('level2');
+                    spawnFish();
+                }, 4500);
+            }
+        }
+
+        function spawnFish() {
+            const container = document.getElementById('fish-container');
+            container.innerHTML = '';
+            let fishCount = 0;
+            
+            for (let i = 0; i < 4; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * 600 + 50;
+                    const y = Math.random() * 300 + 50;
+                    const fish = document.createElement('div');
+                    fish.className = 'fish';
+                    fish.textContent = '🐟';
+                    fish.style.left = x + 'px';
+                    fish.style.top = y + 'px';
+                    fish.onclick = () => {
+                        fishCount++;
+                        document.getElementById('level2-counter').textContent = `Fish: ${fishCount}/4`;
+                        fish.remove();
+                        
+                        if (fishCount >= 4) {
+                            gameState.level = 3;
+                            gameState.fish += 4;
+                            gameState.fatness = Math.min(1, gameState.fatness + 0.1);
+                            saveState();
+                            playSimpleLevel(3);
+                        }
+                    };
+                    container.appendChild(fish);
+                }, i * 500);
+            }
+        }
+
+        function playSimpleLevel(levelNum) {
+            document.getElementById('simple-title').textContent = `Level ${levelNum}: Challenge!`;
+            showScene('level-simple');
+            
+            setTimeout(() => {
+                if (levelNum >= 10) {
+                    showCredits();
+                } else {
+                    gameState.level = levelNum + 1;
+                    gameState.fish += 2;
+                    gameState.fatness = Math.min(1, gameState.fatness + 0.05);
+                    saveState();
+                    playSimpleLevel(levelNum + 1);
+                }
+            }, 3000);
+        }
+
+        function showCredits() {
+            document.getElementById('final-stats').textContent = `Final: ${gameState.fish} Fish | ${(gameState.fatness * 100).toFixed(0)}% Fatness`;
+            showScene('credits');
+        }
+
+        function restart() {
+            gameState.level = 0;
+            gameState.fish = 0;
+            gameState.fatness = 0.5;
+            gameState.hatchCount = 0;
+            saveState();
+            showScene('menu');
+        }
+
+        // Start with menu
+        showScene('menu');
+    </script>
+</body>
+</html>
